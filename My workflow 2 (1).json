@@ -1,0 +1,200 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        16
+      ],
+      "id": "1914f757-2a15-4904-9cb1-bea3963293e9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.weatherapi.com/v1/current.json?key=534a20dd7a6a4952b4370122252707&q=Dhaka&aapi=no",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ef042600-0ad1-4fdd-aaf2-27da5a7569be",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c77967d-8791-481c-9afc-285938a07ae6",
+              "name": "subject",
+              "value": "weather in Dhaka today",
+              "type": "string"
+            },
+            {
+              "id": "a3222048-8c74-4601-8088-0cc8b3ccd405",
+              "name": "Body",
+              "value": "=Temperature: {{$json[\"main\"][\"temp\"]}}°C Condition: {{$json[\"weather\"][0][\"description\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "e4a0f1d1-ec92-45e4-91f5-93d6ee817436",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You will receive weather information in JSON format.\n\nSummarize today's weather in friendly English based on the temperature, feels-like temperature, and weather condition. If it's raining, mention that clearly and advise the user to bring an umbrella or stay indoors. If it's very hot, warn the user and recommend sun protection or limiting outdoor activities.\n\nReturn only the final message. Do not include explanation or formatting instructions.\n\n{{ $json }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e60b6b03-2222-4a9f-add6-7c932309233f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "a3afa6bf-3e58-435c-8ce7-b786c91f8c9e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "T2ZFEqo9ySmuRSJ6",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "jannatulferdous18mim@gmail.com",
+        "subject": "={{    $node[\"HTTP Request\"].json.current.condition.text.includes(\"Sunny\") ? \"☀\" :   $node[\"HTTP Request\"].json.current.condition.text.includes(\"Partly\") ? \"🌤\" :   $node[\"HTTP Request\"].json.current.condition.text.includes(\"Cloud\") ? \"☁\" :   $node[\"HTTP Request\"].json.current.condition.text.includes(\"Rain\") ? \"🌧\" :   $node[\"HTTP Request\"].json.current.condition.text.includes(\"Thunder\") ? \"⛈\" :   $node[\"HTTP Request\"].json.current.condition.text.includes(\"Snow\") ? \"❄\" :   \"🌈\" }} Today's Weather in Dhaka - {{ $node[\"HTTP Request\"].json.current.temp_c }}°C",
+        "message": "=<div style=\"font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 500px; margin: auto; background-color: #f4f4f4; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);\">   <h2 style=\"text-align: center; color: #2c3e50;\">🌤 Daily Weather Report</h2>    <div style=\"background-color: #ffffff; padding: 15px 20px; border-radius: 10px;\">     <p style=\"font-size: 16px; margin-bottom: 10px;\"><strong>📍 Location:</strong><br>       {{ $node[\"HTTP Request\"].json.location.name }}, {{ $node[\"HTTP Request\"].json.location.country }}     </p>      <p style=\"font-size: 16px; margin-bottom: 10px;\"><strong>🌡 Temperature:</strong><br>       {{ $node[\"HTTP Request\"].json.current.temp_c }}°C     </p>      <p style=\"font-size: 16px; margin-bottom: 10px;\"><strong>🌧 Condition:</strong><br>       {{ $node[\"HTTP Request\"].json.current.condition.text }}     </p>      <p style=\"font-size: 16px; margin-bottom: 10px;\"><strong>🥵 Feels Like:</strong><br>       {{ $node[\"HTTP Request\"].json.current.feelslike_c }}°C     </p>      <hr style=\"margin: 20px 0; border: none; border-top: 1px dashed #ccc;\">      <p style=\"font-size: 16px; margin-bottom: 0;\"><strong>📝 Summary:</strong><br>       {{ $node[\"AI Agent\"].json.output }}     </p>    </div>    <p style=\"text-align: center; font-size: 14px; color: #7f8c8d; margin-top: 20px;\">     Sent automatically by your weather bot 💌   </p> </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        64
+      ],
+      "id": "bb28e937-4bff-4506-9559-1666c959d704",
+      "name": "Send a message",
+      "webhookId": "3f1ac940-3af3-46cb-820a-0f58f0789be0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FYBDTkfazXrsZY9O",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d106fa00-8c2f-4cce-b8e4-bc46905e1a30",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1ca56371e38a27277ec612dc45e2f858e4b8ff75b67daf27ea4d1b58f3f12f58"
+  },
+  "id": "9UdAiVBSCLCwEwNz",
+  "tags": []
+}
